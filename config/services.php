@@ -41,4 +41,12 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'openpay' => [
+        'merchant_id' => env('OPENPAY_MERCHANT_ID'),
+        'private_key' => env('OPENPAY_PRIVATE_KEY'),
+        'public_key' => env('OPENPAY_PUBLIC_KEY'),
+        'sandbox_mode' => env('OPENPAY_SANDBOX_MODE', true),
+        'production_mode' => env('OPENPAY_PRODUCTION_MODE', 'FALSE'),
+    ],
+
 ];
