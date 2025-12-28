@@ -37,6 +37,7 @@ class SubmitUserQuiz
                 'spiritual_practice_frequency' => $quizData['spiritual_practice_frequency'],
                 'daily_challenges' => $quizData['daily_challenges'],
                 'stoic_paths' => $quizData['stoic_paths'],
+                'stoic_level' => $quizData['stoic_level'] ?? null,
                 'completed_at' => now()
             ]);
 

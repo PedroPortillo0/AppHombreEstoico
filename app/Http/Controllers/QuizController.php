@@ -42,6 +42,7 @@ class QuizController extends Controller
             'daily_challenges.*' => 'string',
             'stoic_paths' => 'required|array|min:2',
             'stoic_paths.*' => 'string',
+            'stoic_level' => 'nullable|string|in:principiante,intermedio,avanzado',
         ], [
             'age_range.required' => 'El rango de edad es requerido',
             'gender.required' => 'El género es requerido',
@@ -52,6 +53,8 @@ class QuizController extends Controller
             'daily_challenges.min' => 'Debes seleccionar al menos 2 desafíos diarios',
             'stoic_paths.required' => 'Los caminos estoicos son requeridos',
             'stoic_paths.min' => 'Debes seleccionar al menos 2 caminos estoicos',
+            'stoic_level.string' => 'El nivel estoico debe ser un texto válido',
+            'stoic_level.in' => 'El nivel estoico debe ser uno de: principiante, intermedio, avanzado',
         ]);
 
         if ($validator->fails()) {
