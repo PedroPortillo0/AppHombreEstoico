@@ -28,9 +28,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | URL base de la API del proveedor de IA.
+    | Si no se especifica, se usará un valor por defecto según el proveedor.
     |
     */
-    'base_url' => env('AI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
+    'base_url' => env('AI_BASE_URL'),
 
     /*
     |--------------------------------------------------------------------------
@@ -65,6 +66,6 @@ return [
     | Configuración específica para OpenAI.
     |
     */
-    'openai_model' => env('AI_OPENAI_MODEL', 'gpt-3.5-turbo'),
+    'openai_model' => env('AI_OPENAI_MODEL', 'gpt-4o-mini'),
 ];
 
