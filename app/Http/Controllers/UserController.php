@@ -294,7 +294,7 @@ class UserController extends Controller
                 'daily_challenges.*' => 'string',
                 'stoic_paths' => 'nullable|array|min:2',
                 'stoic_paths.*' => 'string',
-                'stoic_level' => 'nullable|string|in:principiante,intermedio,avanzado',
+                'stoic_level' => 'nullable|string|in:principiante,basico_intermedio,intermedio,intermedio_avanzado,avanzado',
             ], [
                 'age_range.string' => 'El rango de edad debe ser un texto válido',
                 'gender.string' => 'El género debe ser un texto válido',
@@ -309,7 +309,7 @@ class UserController extends Controller
                 'stoic_paths.min' => 'Debes seleccionar al menos 2 caminos estoicos',
                 'stoic_paths.*.string' => 'Cada camino estoico debe ser un texto válido',
                 'stoic_level.string' => 'El nivel estoico debe ser un texto válido',
-                'stoic_level.in' => 'El nivel estoico debe ser uno de: principiante, intermedio, avanzado',
+                'stoic_level.in' => 'El nivel estoico debe ser uno de: principiante, basico_intermedio, intermedio, intermedio_avanzado, avanzado',
             ]);
 
             if ($validator->fails()) {

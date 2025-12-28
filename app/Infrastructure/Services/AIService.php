@@ -18,16 +18,29 @@ class AIService implements AIServiceInterface
     {
         $this->provider = config('ai.provider', 'gemini');
         $this->apiKey = config('ai.api_key');
-        $this->baseUrl = config('ai.base_url');
         $this->projectId = config('ai.project_id');
 
         if (empty($this->apiKey)) {
             throw new Exception('AI API Key no configurada. Verifica tu archivo .env');
         }
 
+        // Establecer base_url con valor por defecto según el proveedor si no está configurado
+        $this->baseUrl = config('ai.base_url');
         if (empty($this->baseUrl)) {
-            throw new Exception('AI Base URL no configurada. Verifica tu archivo .env');
+            $this->baseUrl = $this->getDefaultBaseUrl($this->provider);
         }
+    }
+
+    /**
+     * Obtiene la URL base por defecto según el proveedor
+     */
+    private function getDefaultBaseUrl(string $provider): string
+    {
+        return match($provider) {
+            'openai' => 'https://api.openai.com/v1',
+            'gemini' => 'https://generativelanguage.googleapis.com/v1beta',
+            default => 'https://api.openai.com/v1', // Fallback a OpenAI
+        };
     }
 
     public function generateText(string $prompt, array $options = []): string
@@ -119,7 +132,7 @@ class AIService implements AIServiceInterface
         $url = $this->baseUrl . '/chat/completions';
         
         $payload = [
-            'model' => $options['model'] ?? config('ai.openai_model', 'gpt-3.5-turbo'),
+            'model' => $options['model'] ?? config('ai.openai_model'),
             'messages' => [
                 ['role' => 'user', 'content' => $prompt]
             ],
@@ -147,7 +160,7 @@ class AIService implements AIServiceInterface
         $url = $this->baseUrl . '/chat/completions';
         
         $payload = [
-            'model' => $options['model'] ?? 'gpt-3.5-turbo',
+            'model' => $options['model'] ?? config('ai.openai_model'),
             'messages' => [
                 ['role' => 'user', 'content' => $prompt]
             ],

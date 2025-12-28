@@ -10,6 +10,7 @@ use App\Domain\Enums\Espiritualidad\SpiritualPracticeLevel;
 use App\Domain\Enums\Espiritualidad\SpiritualPracticeFrequency;
 use App\Domain\Enums\DesafiosDiarios\DailyChallenge;
 use App\Domain\Enums\CaminoEstoico\StoicPath;
+use App\Domain\Enums\NivelEstoico\StoicLevel;
 
 class GetQuizOptions
 {
@@ -63,7 +64,12 @@ class GetQuizOptions
                     'description' => $case->getDescription(),
                     'icon' => $case->getIcon(),
                     'color' => $case->getColor()
-                ], StoicPath::cases())
+                ], StoicPath::cases()),
+                
+                'stoic_levels' => array_map(fn($case) => [
+                    'value' => $case->value,
+                    'label' => $case->getLabel()
+                ], StoicLevel::cases())
             ]
         ];
     }
