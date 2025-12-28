@@ -30,6 +30,7 @@ class User extends Model
         'avatar',
         'auth_provider',
         'is_admin',
+        'stoic_points',
     ];
 
     /**
@@ -52,6 +53,7 @@ class User extends Model
             'email_verificado' => 'boolean',
             'quiz_completed' => 'boolean',
             'is_admin' => 'boolean',
+            'stoic_points' => 'integer',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

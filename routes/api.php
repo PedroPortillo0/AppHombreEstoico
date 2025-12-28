@@ -8,6 +8,7 @@ use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\DailyQuoteController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\DiarioController;
+use App\Http\Controllers\ChallengeController;
 
 // ========================================
 // RUTAS PÚBLICAS (Sin autenticación)
@@ -140,5 +141,18 @@ Route::prefix('diario')->middleware('jwt.auth')->group(function () {
     Route::delete('/{id}', [DiarioController::class, 'destroy']);
 });
 
-
+// ========================================
+// RUTAS DE DESAFÍOS ESTOICOS
+// ========================================
+// Sistema de puntos y niveles dinámicos. Requiere autenticación JWT.
+Route::prefix('challenges')->middleware('jwt.auth')->group(function () {
+    // Registrar que un desafío fue completado
+    Route::post('/complete', [ChallengeController::class, 'complete']);
+    
+    // Obtener progreso del usuario (puntos, nivel actual, siguiente nivel)
+    Route::get('/progress', [ChallengeController::class, 'getProgress']);
+    
+    // Obtener historial de actividades completadas
+    Route::get('/history', [ChallengeController::class, 'getHistory']);
+});
 

@@ -107,6 +107,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | JWT Secret Key
+    |--------------------------------------------------------------------------
+    |
+    | This key is used for signing and verifying JWT tokens. It should be set
+    | to a random, secure string. If not set, it will fallback to APP_KEY.
+    | Set this in your ".env" file as JWT_SECRET.
+    |
+    */
+
+    'jwt_secret' => env('JWT_SECRET', env('APP_KEY')),
+
+    /*
+    |--------------------------------------------------------------------------
     | Maintenance Mode Driver
     |--------------------------------------------------------------------------
     |
