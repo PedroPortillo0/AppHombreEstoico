@@ -6,6 +6,7 @@ use App\Domain\ValueObjects\Email;
 use App\Domain\ValueObjects\Password;
 use App\Domain\Ports\UserRepositoryInterface;
 use App\Domain\Ports\TokenServiceInterface;
+use App\Models\Subscription;
 use Exception;
 
 class LoginUser
@@ -51,11 +52,42 @@ class LoginUser
                 'email' => $user->getEmail()
             ]);
 
+            // Obtener información de suscripción
+            $subscription = Subscription::where('user_id', $user->getId())
+                ->whereIn('status', ['active', 'trial'])
+                ->where(function($query) {
+                    $query->whereNull('ends_at')
+                          ->orWhere('ends_at', '>', now());
+                })
+                ->first();
+
+            $subscriptionData = null;
+            if ($subscription) {
+                $subscriptionData = [
+                    'hasActiveSubscription' => true,
+                    'status' => $subscription->status,
+                    'planName' => $subscription->plan_name,
+                    'currentPeriodEnd' => $subscription->current_period_end?->format('Y-m-d H:i:s'),
+                    'onTrial' => $subscription->onTrial(),
+                    'trialEnd' => $subscription->trial_end?->format('Y-m-d H:i:s'),
+                ];
+            } else {
+                $subscriptionData = [
+                    'hasActiveSubscription' => false,
+                    'status' => 'inactive',
+                    'planName' => null,
+                    'currentPeriodEnd' => null,
+                    'onTrial' => false,
+                    'trialEnd' => null,
+                ];
+            }
+
             return [
                 'success' => true,
                 'message' => 'Login exitoso',
                 'token' => $token,
-                'data' => $user->toArray()
+                'data' => $user->toArray(),
+                'subscription' => $subscriptionData
             ];
 
         } catch (Exception $e) {
