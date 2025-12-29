@@ -9,9 +9,9 @@ class UserChallengeCompletion extends Model
     protected $fillable = [
         'id',
         'user_id',
-        'challenge_id',
-        'challenge_title',
-        'challenge_description',
+        'name',
+        'level',
+        'objective',
         'points',
         'completed_at'
     ];
