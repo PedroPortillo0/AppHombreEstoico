@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Model
 {
@@ -60,22 +61,11 @@ class User extends Model
     }
 
     /**
-     * Relación con suscripciones
+     * Relación con las suscripciones del usuario
      */
-    public function subscriptions()
+    public function subscriptions(): HasMany
     {
-        return $this->hasMany(Subscription::class);
-    }
-
-    /**
-     * Obtener la suscripción activa del usuario
-     */
-    public function activeSubscription()
-    {
-        return $this->hasOne(Subscription::class)
-            ->where('status', 'active')
-            ->whereNull('ends_at')
-            ->orWhere('ends_at', '>', now());
+        return $this->hasMany(Subscription::class, 'user_id', 'id');
     }
 
     /**
@@ -90,14 +80,5 @@ class User extends Model
                       ->orWhere('ends_at', '>', now());
             })
             ->exists();
-    }
-
-    /**
-     * Verificar si el usuario tiene acceso a frases personalizadas
-     * Requiere: quiz completado Y suscripción activa
-     */
-    public function canAccessPersonalizedQuotes(): bool
-    {
-        return $this->quiz_completed && $this->hasActiveSubscription();
     }
 }

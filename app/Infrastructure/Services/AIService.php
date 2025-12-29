@@ -112,10 +112,17 @@ class AIService implements AIServiceInterface
         ];
 
         // La API key debe enviarse como header X-goog-api-key, no como query parameter
-        $response = Http::withHeaders([
+        $http = Http::withHeaders([
             'Content-Type' => 'application/json',
             'X-goog-api-key' => $this->apiKey,
-        ])->post($url, $payload);
+        ]);
+
+        // En desarrollo, permitir desactivar verificación SSL si está configurado
+        if (config('ai.verify_ssl', true) === false) {
+            $http = $http->withoutVerifying();
+        }
+
+        $response = $http->post($url, $payload);
 
         if (!$response->successful()) {
             throw new Exception('Error en API de Gemini: ' . $response->body());
@@ -140,10 +147,17 @@ class AIService implements AIServiceInterface
             'max_tokens' => $options['max_tokens'] ?? 1024,
         ];
 
-        $response = Http::withHeaders([
+        $http = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . $this->apiKey,
-        ])->post($url, $payload);
+        ]);
+
+        // En desarrollo, permitir desactivar verificación SSL si está configurado
+        if (config('ai.verify_ssl', true) === false) {
+            $http = $http->withoutVerifying();
+        }
+
+        $response = $http->post($url, $payload);
 
         if (!$response->successful()) {
             throw new Exception('Error en API de OpenAI: ' . $response->body());
@@ -204,4 +218,3 @@ class AIService implements AIServiceInterface
         throw new Exception('No se pudo extraer el texto de la respuesta de la IA');
     }
 }
-
