@@ -117,9 +117,19 @@
     <!-- Header -->
     <nav class="navbar navbar-dark mb-4" style="background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ route('admin.daily-quotes.index') }}">
-                <i class="bi bi-quote"></i> Panel de Frases Diarias
-            </a>
+            <div class="d-flex align-items-center">
+                <a class="navbar-brand me-4" href="{{ route('admin.daily-quotes.index') }}">
+                    <i class="bi bi-quote"></i> Panel de Administración
+                </a>
+                <div class="navbar-nav flex-row">
+                    <a class="nav-link text-white me-3" href="{{ route('admin.daily-quotes.index') }}">
+                        <i class="bi bi-quote"></i> Frases Diarias
+                    </a>
+                    <a class="nav-link text-white" href="{{ route('admin.books.index') }}">
+                        <i class="bi bi-book"></i> Subir Libros
+                    </a>
+                </div>
+            </div>
             <div>
                 <span class="text-white me-3"><i class="bi bi-person-circle"></i> Administrador</span>
                 <form action="{{ route('admin.logout') }}" method="POST" class="d-inline">
