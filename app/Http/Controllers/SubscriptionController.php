@@ -213,7 +213,7 @@ class SubscriptionController extends Controller
     /**
      * Obtener el estado de la suscripción del usuario autenticado
      * 
-     * GET /api/subscriptions/status
+     * GET /subscription/status (Web) o GET /api/subscriptions/status (API)
      */
     public function status(Request $request)
     {
@@ -225,11 +225,21 @@ class SubscriptionController extends Controller
                 ->latest()
                 ->first();
 
+            // Si no tiene suscripción
             if (!$subscription) {
-                return response()->json([
-                    'success' => true,
-                    'has_subscription' => false,
-                    'message' => 'No tienes una suscripción activa'
+                // Si es petición API, devolver JSON
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'success' => true,
+                        'has_subscription' => false,
+                        'message' => 'No tienes una suscripción activa'
+                    ]);
+                }
+                // Si es petición web, mostrar vista
+                return view('subscription.status', [
+                    'hasSubscription' => false,
+                    'subscription' => null,
+                    'user' => $user
                 ]);
             }
 
@@ -250,19 +260,37 @@ class SubscriptionController extends Controller
                 }
             }
 
-            return response()->json([
-                'success' => true,
-                'has_subscription' => true,
-                'subscription' => $subscription
+            // Si es petición API, devolver JSON
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'has_subscription' => true,
+                    'subscription' => $subscription
+                ]);
+            }
+
+            // Si es petición web, mostrar vista
+            return view('subscription.status', [
+                'hasSubscription' => true,
+                'subscription' => $subscription,
+                'user' => $user
             ]);
 
         } catch (Exception $e) {
             Log::error('Error al obtener estado de suscripción: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al obtener estado de suscripción',
-                'error' => $e->getMessage()
-            ], 500);
+            
+            // Si es petición API, devolver JSON
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al obtener estado de suscripción',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+            
+            // Si es petición web, redirigir con error
+            return redirect()->route('subscription.premium')
+                ->with('error', 'Error al obtener estado de suscripción');
         }
     }
 
@@ -307,19 +335,36 @@ class SubscriptionController extends Controller
             // Marcar como cancelada localmente
             $subscription->markAsCancelled();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Suscripción cancelada exitosamente',
-                'subscription' => $subscription
+            // Si es petición API, devolver JSON
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Suscripción cancelada exitosamente',
+                    'subscription' => $subscription
+                ]);
+            }
+
+            // Si es petición web, mostrar vista de confirmación
+            return view('subscription.cancelled', [
+                'subscription' => $subscription,
+                'user' => $user
             ]);
 
         } catch (Exception $e) {
             Log::error('Error al cancelar suscripción: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al cancelar suscripción',
-                'error' => $e->getMessage()
-            ], 500);
+            
+            // Si es petición API, devolver JSON
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al cancelar suscripción',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+            
+            // Si es petición web, redirigir con error
+            return redirect()->route('subscription.status')
+                ->with('error', 'Error al cancelar suscripción: ' . $e->getMessage());
         }
     }
 
