@@ -354,6 +354,55 @@ class SubscriptionController extends Controller
     }
 
     /**
+     * Verificar si el usuario puede acceder a frases personalizadas
+     * Requiere: suscripción activa + quiz completado
+     * 
+     * GET /api/subscriptions/check-personalized-access
+     */
+    public function checkPersonalizedAccess(Request $request)
+    {
+        try {
+            // Obtener usuario autenticado del middleware JWT
+            $user = $request->attributes->get('authenticated_user');
+            
+            $hasActiveSubscription = $user->hasActiveSubscription();
+            $hasQuizCompleted = $user->isQuizCompleted();
+            $canAccessPersonalized = $user->canAccessPersonalizedQuotes();
+
+            $activeSubscription = null;
+            if ($hasActiveSubscription) {
+                $activeSubscription = Subscription::where('user_id', $user->getId())
+                    ->where('status', 'active')
+                    ->where(function($query) {
+                        $query->whereNull('ends_at')
+                              ->orWhere('ends_at', '>', now());
+                    })
+                    ->first();
+            }
+
+            return response()->json([
+                'success' => true,
+                'can_access_personalized_quotes' => $canAccessPersonalized,
+                'has_active_subscription' => $hasActiveSubscription,
+                'has_quiz_completed' => $hasQuizCompleted,
+                'subscription' => $activeSubscription,
+                'requirements' => [
+                    'quiz_completed' => $hasQuizCompleted,
+                    'active_subscription' => $hasActiveSubscription
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error al verificar acceso personalizado: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al verificar acceso',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Webhook de OpenPay para recibir notificaciones
      * 
      * POST /api/subscriptions/webhook

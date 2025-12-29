@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
             'admin.auth' => \App\Http\Middleware\AdminAuth::class,
+            'subscription.active' => \App\Http\Middleware\CheckActiveSubscription::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
