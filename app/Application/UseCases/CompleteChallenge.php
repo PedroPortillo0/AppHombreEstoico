@@ -22,13 +22,22 @@ class CompleteChallenge
             // Validar datos del desafío
             $this->validateChallengeData($challengeData);
 
+            // Validar que el usuario no haya completado este desafío antes
+            $existingCompletion = UserChallengeCompletion::where('user_id', $userId)
+                ->where('name', $challengeData['name'])
+                ->first();
+
+            if ($existingCompletion) {
+                throw new Exception('Ya has completado este desafío anteriormente. No puedes completarlo nuevamente.');
+            }
+
             // Registrar la actividad completada
             $completion = UserChallengeCompletion::create([
                 'id' => Str::uuid()->toString(),
                 'user_id' => $userId,
-                'challenge_id' => $challengeData['challenge_id'],
-                'challenge_title' => $challengeData['challenge_title'] ?? null,
-                'challenge_description' => $challengeData['challenge_description'] ?? null,
+                'name' => $challengeData['name'],
+                'level' => $challengeData['level'],
+                'objective' => $challengeData['objective'],
                 'points' => 1, // Cada actividad vale 1 punto
                 'completed_at' => now()
             ]);
@@ -89,8 +98,22 @@ class CompleteChallenge
 
     private function validateChallengeData(array $data): void
     {
-        if (!isset($data['challenge_id']) || empty($data['challenge_id'])) {
-            throw new Exception('El ID del desafío es requerido');
+        if (!isset($data['name']) || empty($data['name'])) {
+            throw new Exception('El nombre del desafío es requerido');
+        }
+        
+        if (!isset($data['level']) || empty($data['level'])) {
+            throw new Exception('El nivel del desafío es requerido');
+        }
+        
+        if (!isset($data['objective']) || empty($data['objective'])) {
+            throw new Exception('El objetivo del desafío es requerido');
+        }
+        
+        // Validar que el level sea válido
+        $validLevels = ['principiante', 'basico_intermedio', 'intermedio', 'intermedio_avanzado', 'avanzado'];
+        if (!in_array($data['level'], $validLevels)) {
+            throw new Exception('El nivel del desafío no es válido');
         }
     }
 }

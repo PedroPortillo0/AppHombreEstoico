@@ -3,9 +3,21 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminDailyQuoteController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\SubscriptionController;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+// ========================================
+// RUTAS DE SUSCRIPCIÓN PREMIUM
+// ========================================
+Route::prefix('subscription')->name('subscription.')->group(function () {
+    Route::get('/premium', [SubscriptionController::class, 'showPremium'])->name('premium');
+    Route::get('/payment', [SubscriptionController::class, 'showPaymentForm'])->name('payment');
+    Route::post('/subscribe', [SubscriptionController::class, 'subscribe'])->name('subscribe');
+    Route::get('/status', [SubscriptionController::class, 'status'])->name('status');
+    Route::post('/cancel', [SubscriptionController::class, 'cancel'])->name('cancel');
 });
 
 // ========================================

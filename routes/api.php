@@ -9,6 +9,7 @@ use App\Http\Controllers\DailyQuoteController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\DiarioController;
 use App\Http\Controllers\ChallengeController;
+use App\Http\Controllers\SubscriptionController;
 
 // ========================================
 // RUTAS PÚBLICAS (Sin autenticación)
@@ -156,3 +157,27 @@ Route::prefix('challenges')->middleware('jwt.auth')->group(function () {
     Route::get('/history', [ChallengeController::class, 'getHistory']);
 });
 
+// RUTAS DE SUSCRIPCIONES (Requieren autenticación JWT)
+// ========================================
+Route::prefix('subscriptions')->middleware('jwt.auth')->group(function () {
+    // Crear nueva suscripción
+    Route::post('/', [SubscriptionController::class, 'subscribe']);
+    
+    // Obtener estado de la suscripción actual
+    Route::get('/status', [SubscriptionController::class, 'status']);
+    
+    // Verificar si el usuario puede acceder a frases personalizadas
+    Route::get('/check-personalized-access', [SubscriptionController::class, 'checkPersonalizedAccess']);
+    
+    // Listar todas las suscripciones del usuario
+    Route::get('/', [SubscriptionController::class, 'index']);
+    
+    // Cancelar suscripción activa
+    Route::delete('/', [SubscriptionController::class, 'cancel']);
+});
+
+// ========================================
+// WEBHOOK DE OPENPAY (Sin autenticación - OpenPay lo llama)
+// ========================================
+Route::post('/subscriptions/webhook', [SubscriptionController::class, 'webhook']
+);

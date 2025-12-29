@@ -10,7 +10,7 @@ return [
     | Opciones: 'gemini', 'openai', 'claude', etc.
     |
     */
-    'provider' => env('AI_PROVIDER', 'gemini'),
+    'provider' => env('AI_PROVIDER', 'openai'),
 
     /*
     |--------------------------------------------------------------------------
@@ -67,5 +67,17 @@ return [
     |
     */
     'openai_model' => env('AI_OPENAI_MODEL', 'gpt-4o-mini'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | SSL Verification
+    |--------------------------------------------------------------------------
+    |
+    | Verificar certificados SSL en las peticiones HTTP.
+    | ADVERTENCIA: Solo desactivar en desarrollo si tienes problemas de certificados.
+    | NUNCA desactivar en producción.
+    |
+    */
+    'verify_ssl' => env('AI_VERIFY_SSL', true),
 ];
 

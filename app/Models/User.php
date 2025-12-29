@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Model
 {
@@ -57,5 +58,27 @@ class User extends Model
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Relación con las suscripciones del usuario
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'user_id', 'id');
+    }
+
+    /**
+     * Verificar si el usuario tiene una suscripción activa
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where(function($query) {
+                $query->whereNull('ends_at')
+                      ->orWhere('ends_at', '>', now());
+            })
+            ->exists();
     }
 }

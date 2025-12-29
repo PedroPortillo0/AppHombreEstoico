@@ -22,11 +22,14 @@ class ChallengeController extends Controller
     public function complete(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'challenge_id' => 'required|string',
-            'challenge_title' => 'nullable|string|max:255',
-            'challenge_description' => 'nullable|string',
+            'name' => 'required|string|max:255',
+            'level' => 'required|string|in:principiante,basico_intermedio,intermedio,intermedio_avanzado,avanzado',
+            'objective' => 'required|string',
         ], [
-            'challenge_id.required' => 'El ID del desafío es requerido',
+            'name.required' => 'El nombre del desafío es requerido',
+            'level.required' => 'El nivel del desafío es requerido',
+            'level.in' => 'El nivel debe ser uno de: principiante, basico_intermedio, intermedio, intermedio_avanzado, avanzado',
+            'objective.required' => 'El objetivo del desafío es requerido',
         ]);
 
         if ($validator->fails()) {
