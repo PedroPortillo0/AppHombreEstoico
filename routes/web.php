@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminDailyQuoteController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\AdminBookController;
 use App\Http\Controllers\SubscriptionController;
 
 Route::get('/', function () {
@@ -48,5 +49,11 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
         Route::get('/{id}/edit', [AdminDailyQuoteController::class, 'edit'])->name('edit');
         Route::put('/{id}', [AdminDailyQuoteController::class, 'update'])->name('update');
         Route::delete('/{id}', [AdminDailyQuoteController::class, 'destroy'])->name('destroy');
+    });
+
+    // Panel de subida de libros
+    Route::prefix('books')->name('admin.books.')->group(function () {
+        Route::get('/', [AdminBookController::class, 'index'])->name('index');
+        Route::post('/upload', [AdminBookController::class, 'upload'])->name('upload');
     });
 });
