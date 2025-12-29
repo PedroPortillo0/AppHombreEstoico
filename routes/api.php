@@ -166,6 +166,9 @@ Route::prefix('subscriptions')->middleware('jwt.auth')->group(function () {
     // Obtener estado de la suscripción actual
     Route::get('/status', [SubscriptionController::class, 'status']);
     
+    // Verificar si el usuario puede acceder a frases personalizadas
+    Route::get('/check-personalized-access', [SubscriptionController::class, 'checkPersonalizedAccess']);
+    
     // Listar todas las suscripciones del usuario
     Route::get('/', [SubscriptionController::class, 'index']);
     

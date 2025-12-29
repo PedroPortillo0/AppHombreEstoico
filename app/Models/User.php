@@ -58,4 +58,46 @@ class User extends Model
             'updated_at' => 'datetime',
         ];
     }
+
+    /**
+     * Relación con suscripciones
+     */
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Obtener la suscripción activa del usuario
+     */
+    public function activeSubscription()
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('status', 'active')
+            ->whereNull('ends_at')
+            ->orWhere('ends_at', '>', now());
+    }
+
+    /**
+     * Verificar si el usuario tiene una suscripción activa
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where(function($query) {
+                $query->whereNull('ends_at')
+                      ->orWhere('ends_at', '>', now());
+            })
+            ->exists();
+    }
+
+    /**
+     * Verificar si el usuario tiene acceso a frases personalizadas
+     * Requiere: quiz completado Y suscripción activa
+     */
+    public function canAccessPersonalizedQuotes(): bool
+    {
+        return $this->quiz_completed && $this->hasActiveSubscription();
+    }
 }

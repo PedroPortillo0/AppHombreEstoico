@@ -54,11 +54,12 @@ class GetDailyQuote
                 'category' => $quoteEntity->getCategory(),
             ];
 
-            // Verificar si el usuario tiene quiz completo y generar personalización
+            // Verificar si el usuario tiene quiz completo Y suscripción activa para personalización
             if ($userId) {
                 $user = $this->userRepository->findById($userId);
                 
-                if ($user && $user->isQuizCompleted()) {
+                // VERIFICAR: Quiz completo Y suscripción activa
+                if ($user && $user->isQuizCompleted() && $user->hasActiveSubscription()) {
                     $today = Carbon::today()->toDateString();
                     
                     // Verificar si ya existe una frase personalizada para hoy
