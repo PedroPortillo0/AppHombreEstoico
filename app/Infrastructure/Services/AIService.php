@@ -16,7 +16,7 @@ class AIService implements AIServiceInterface
 
     public function __construct()
     {
-        $this->provider = config('ai.provider', 'gemini');
+        $this->provider = config('ai.provider', 'openai');
         $this->apiKey = config('ai.api_key');
         $this->projectId = config('ai.project_id');
 
