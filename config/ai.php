@@ -10,7 +10,7 @@ return [
     | Opciones: 'gemini', 'openai', 'claude', etc.
     |
     */
-    'provider' => env('AI_PROVIDER', 'gemini'),
+    'provider' => env('AI_PROVIDER', 'openai'),
 
     /*
     |--------------------------------------------------------------------------
