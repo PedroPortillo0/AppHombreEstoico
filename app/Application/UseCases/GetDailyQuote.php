@@ -5,6 +5,7 @@ namespace App\Application\UseCases;
 use App\Domain\Ports\DailyQuoteRepositoryInterface;
 use App\Application\UseCases\GeneratePersonalizedQuoteExplanation;
 use App\Domain\Ports\UserRepositoryInterface;
+use App\Models\User as UserModel;
 use App\Models\UserQuizResponse;
 use App\Models\UserPersonalizedQuote;
 use Carbon\Carbon;
@@ -54,12 +55,27 @@ class GetDailyQuote
                 'category' => $quoteEntity->getCategory(),
             ];
 
-            // Verificar si el usuario tiene quiz completo y generar personalización
+            // Verificar si el usuario tiene quiz completo Y suscripción activa para generar personalización
             if ($userId) {
-                $user = $this->userRepository->findById($userId);
+                // Usar el modelo Eloquent directamente para verificar la suscripción activa
+                $userModel = UserModel::find($userId);
                 
-                if ($user && $user->isQuizCompleted()) {
+                // Debug logs
+                \Illuminate\Support\Facades\Log::info('GetDailyQuote - Checking personalization requirements', [
+                    'userId' => $userId,
+                    'userFound' => $userModel ? 'yes' : 'no',
+                    'quizCompleted' => $userModel ? $userModel->quiz_completed : 'N/A',
+                    'hasActiveSubscription' => $userModel ? $userModel->hasActiveSubscription() : 'N/A'
+                ]);
+                
+                // IMPORTANTE: Se requiere quiz completo Y suscripción activa para frases personalizadas
+                if ($userModel && $userModel->quiz_completed && $userModel->hasActiveSubscription()) {
                     $today = Carbon::today()->toDateString();
+                    
+                    \Illuminate\Support\Facades\Log::info('GetDailyQuote - User qualifies for personalized quote', [
+                        'userId' => $userId,
+                        'date' => $today
+                    ]);
                     
                     // Verificar si ya existe una frase personalizada para hoy
                     $existingPersonalizedQuote = UserPersonalizedQuote::where('user_id', $userId)
