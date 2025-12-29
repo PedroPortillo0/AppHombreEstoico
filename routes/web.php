@@ -14,11 +14,18 @@ Route::get('/', function () {
 // RUTAS DE SUSCRIPCIÓN PREMIUM
 // ========================================
 Route::prefix('subscription')->name('subscription.')->group(function () {
+    // Rutas públicas
     Route::get('/premium', [SubscriptionController::class, 'showPremium'])->name('premium');
-    Route::get('/payment', [SubscriptionController::class, 'showPaymentForm'])->name('payment');
-    Route::post('/subscribe', [SubscriptionController::class, 'subscribe'])->name('subscribe');
-    Route::get('/status', [SubscriptionController::class, 'status'])->name('status');
-    Route::post('/cancel', [SubscriptionController::class, 'cancel'])->name('cancel');
+    
+    // Rutas que requieren autenticación
+    Route::middleware('web.jwt.auth')->group(function () {
+        Route::get('/status', [SubscriptionController::class, 'status'])->name('status');
+        Route::get('/payment', [SubscriptionController::class, 'showPaymentForm'])
+            ->middleware('check.subscription')
+            ->name('payment');
+        Route::post('/subscribe', [SubscriptionController::class, 'subscribe'])->name('subscribe');
+        Route::post('/cancel', [SubscriptionController::class, 'cancel'])->name('cancel');
+    });
 });
 
 // ========================================

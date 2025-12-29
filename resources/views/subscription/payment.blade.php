@@ -2,6 +2,14 @@
 
 @section('title', 'Pago Suscripción - Stoic App')
 
+@section('head')
+<!-- jQuery necesario para Openpay -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- Openpay Scripts -->
+<script type="text/javascript" src="https://resources.openpay.mx/lib/openpay-js/1.2.38/openpay.v1.min.js"></script>
+<script type="text/javascript" src="https://resources.openpay.mx/lib/openpay-data-js/1.2.38/openpay-data.v1.min.js"></script>
+@endsection
+
 @section('styles')
 <style>
     body {
@@ -349,11 +357,14 @@
 @section('scripts')
 <script>
     // Configuración
-    const API_URL = '{{ config("app.url") }}';
+    const API_URL = '{{ rtrim(config("app.url"), "/") }}';
     
     // Obtener token de URL o sesión
     const urlParams = new URLSearchParams(window.location.search);
     const JWT_TOKEN = urlParams.get('token') || '{{ session("jwt_token") ?? "" }}';
+    
+    console.log('API URL:', API_URL);
+    console.log('Token disponible:', JWT_TOKEN ? 'Sí' : 'No');
     
     // Elementos del DOM
     const form = document.getElementById('paymentForm');
@@ -412,9 +423,11 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'Authorization': `Bearer ${JWT_TOKEN}`,
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify(formData)
             });
             
@@ -480,6 +493,7 @@
     // Verificar si el usuario ya tiene suscripción al cargar
     async function checkExistingSubscription() {
         if (!JWT_TOKEN) {
+            console.warn('No hay token JWT disponible');
             errorMessage.textContent = 'Debes iniciar sesión para suscribirte';
             errorAlert.classList.add('show');
             submitBtn.disabled = true;
@@ -488,14 +502,23 @@
         
         try {
             const response = await fetch(`${API_URL}/api/subscriptions/status`, {
+                method: 'GET',
                 headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'Authorization': `Bearer ${JWT_TOKEN}`
-                }
+                },
+                credentials: 'same-origin'
             });
+            
+            if (!response.ok) {
+                console.error('Error en respuesta:', response.status, response.statusText);
+                return;
+            }
             
             const data = await response.json();
             
-            if (data.has_subscription && data.subscription.is_active) {
+            if (data.has_subscription && data.subscription && data.subscription.is_active) {
                 successMessage.textContent = 'Ya tienes una suscripción activa';
                 successAlert.classList.add('show');
                 submitBtn.disabled = true;
@@ -506,6 +529,7 @@
             }
         } catch (error) {
             console.error('Error verificando suscripción:', error);
+            // No mostramos error al usuario, solo en consola
         }
     }
     

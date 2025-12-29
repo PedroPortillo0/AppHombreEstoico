@@ -222,6 +222,22 @@
     <div class="premium-card">
         <!-- Content Section -->
         <div class="premium-content">
+            <!-- Mensaje de error si existe -->
+            @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            @endif
+            
+            <!-- Mensaje de éxito si existe -->
+            @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                <i class="bi bi-check-circle"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            @endif
+            
             <div class="text-end">
                 <span class="badge-premium">
                     <i class="bi bi-crown"></i> Plan Premium
