@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'https://web.estoico.app',
+        'https://www.web.estoico.app',
+    ],
 
     'allowed_origins_patterns' => [],
 
