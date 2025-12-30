@@ -68,6 +68,10 @@ class MobileAuthController extends Controller
             // Marcar la sesión como autenticada
             $request->session()->put('authenticated', true);
             $request->session()->put('user_id', $userId);
+            
+            // *** IMPORTANTE: Guardar el token JWT en la sesión ***
+            // Esto permite que el middleware WebJwtAuth encuentre el token en las siguientes peticiones
+            $request->session()->put('jwt_token', $token);
 
             // 5. Redirigir a la página solicitada
             return redirect($redirect);
@@ -134,6 +138,9 @@ class MobileAuthController extends Controller
             // Marcar la sesión como autenticada
             $request->session()->put('authenticated', true);
             $request->session()->put('user_id', $userId);
+            
+            // *** IMPORTANTE: Guardar el token JWT en la sesión ***
+            $request->session()->put('jwt_token', $token);
 
             // 5. Retornar respuesta exitosa
             return response()->json([
