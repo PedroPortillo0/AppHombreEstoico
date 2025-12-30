@@ -49,4 +49,8 @@ return [
         'production_mode' => env('OPENPAY_PRODUCTION_MODE', 'FALSE'),
     ],
 
+    'jwt' => [
+        'secret' => env('JWT_SECRET'),
+    ],
+
 ];

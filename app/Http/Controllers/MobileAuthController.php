@@ -36,7 +36,7 @@ class MobileAuthController extends Controller
             }
 
             // 2. Validar el token JWT
-            $jwtSecret = env('JWT_SECRET');
+            $jwtSecret = config('services.jwt.secret');
             
             if (!$jwtSecret) {
                 return response()->json([
@@ -99,7 +99,7 @@ class MobileAuthController extends Controller
             }
 
             // 2. Validar el token JWT
-            $jwtSecret = env('JWT_SECRET');
+            $jwtSecret = config('services.jwt.secret');
             
             if (!$jwtSecret) {
                 return response()->json([
