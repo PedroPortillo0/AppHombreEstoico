@@ -316,7 +316,7 @@
             
             <!-- Subscribe Button -->
             <div class="mt-4">
-                <a href="{{ route('subscription.payment') }}" class="btn subscribe-btn text-white text-decoration-none d-block">
+                <a href="#" id="subscribeBtn" class="btn subscribe-btn text-white text-decoration-none d-block">
                     Suscribirme ahora
                 </a>
                 <p class="cancel-text">
@@ -346,8 +346,27 @@
 
 @section('scripts')
 <script>
-    // Agregar animaciones o lógica adicional aquí si es necesario
     document.addEventListener('DOMContentLoaded', function() {
+        // Obtener el token de la URL si existe
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        // Configurar el botón de suscripción
+        const subscribeBtn = document.getElementById('subscribeBtn');
+        if (subscribeBtn) {
+            subscribeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Construir la URL con el token si existe
+                let paymentUrl = "{{ route('subscription.payment') }}";
+                if (token) {
+                    paymentUrl += '?token=' + encodeURIComponent(token);
+                }
+                
+                window.location.href = paymentUrl;
+            });
+        }
+        
         console.log('Vista Premium cargada');
     });
 </script>
