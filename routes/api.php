@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\MobileAuthController;
 use App\Http\Controllers\DailyQuoteController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\DiarioController;
@@ -75,6 +76,18 @@ Route::prefix('auth/google')->group(function () {
     
     // Login con token de Google (para apps móviles/SPA)
     Route::post('/token', [GoogleAuthController::class, 'loginWithGoogleToken']);
+});
+
+// ========================================
+// AUTENTICACIÓN MÓVIL A WEB
+// ========================================
+
+Route::prefix('auth')->group(function () {
+    // Crear sesión web desde app móvil (con redirección)
+    Route::get('/mobile-login', [MobileAuthController::class, 'mobileLogin']);
+    
+    // Crear sesión web desde app móvil (respuesta JSON)
+    Route::post('/mobile-login', [MobileAuthController::class, 'mobileLoginJson']);
 });
 
 
