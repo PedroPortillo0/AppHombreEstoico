@@ -222,7 +222,7 @@
     <div class="payment-card">
         <!-- Header -->
         <div class="payment-header">
-            <a href="{{ route('subscription.premium') }}" class="back-link">
+            <a href="#" id="backLink" class="back-link">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
             <h1 class="payment-title">Suscripción Premium</h1>
@@ -366,6 +366,16 @@
     console.log('API URL:', API_URL);
     console.log('Token disponible:', JWT_TOKEN ? 'Sí' : 'No');
     
+    // Configurar enlace de volver
+    const backLink = document.getElementById('backLink');
+    if (backLink) {
+        let premiumUrl = "{{ route('subscription.premium') }}";
+        if (JWT_TOKEN) {
+            premiumUrl += '?token=' + encodeURIComponent(JWT_TOKEN);
+        }
+        backLink.href = premiumUrl;
+    }
+    
     // Elementos del DOM
     const form = document.getElementById('paymentForm');
     const submitBtn = document.getElementById('submitBtn');
@@ -443,7 +453,11 @@
                 
                 // Redirigir después de 2 segundos
                 setTimeout(() => {
-                    window.location.href = '{{ route("subscription.status") }}';
+                    let statusUrl = '{{ route("subscription.status") }}';
+                    if (JWT_TOKEN) {
+                        statusUrl += '?token=' + encodeURIComponent(JWT_TOKEN);
+                    }
+                    window.location.href = statusUrl;
                 }, 2000);
             } else {
                 // Error del servidor
@@ -524,7 +538,11 @@
                 submitBtn.disabled = true;
                 
                 setTimeout(() => {
-                    window.location.href = '{{ route("subscription.status") }}';
+                    let statusUrl = '{{ route("subscription.status") }}';
+                    if (JWT_TOKEN) {
+                        statusUrl += '?token=' + encodeURIComponent(JWT_TOKEN);
+                    }
+                    window.location.href = statusUrl;
                 }, 2000);
             }
         } catch (error) {
