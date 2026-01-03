@@ -32,6 +32,28 @@ class EloquentUserRepository implements UserRepositoryInterface
                     'is_admin' => $user->isAdmin(),
                 ]);
             } else {
+                // Verificar si el google_id ya existe (si el usuario tiene google_id)
+                if ($user->getGoogleId()) {
+                    $existingGoogleId = UserModel::where('google_id', $user->getGoogleId())->first();
+                    if ($existingGoogleId) {
+                        // Si el google_id ya existe, actualizar ese usuario
+                        $userModel = $existingGoogleId;
+                        $userModel->update([
+                            'nombre' => $user->getNombre(),
+                            'apellidos' => $user->getApellidos(),
+                            'email' => $user->getEmail(),
+                            'password' => $user->getPassword(),
+                            'email_verificado' => $user->isEmailVerificado(),
+                            'quiz_completed' => $user->isQuizCompleted(),
+                            'avatar' => $user->getAvatar(),
+                            'auth_provider' => $user->getAuthProvider(),
+                            'is_admin' => $user->isAdmin(),
+                        ]);
+                        $userModel->refresh();
+                        return $this->toDomainEntity($userModel);
+                    }
+                }
+
                 // Verificar si el email ya existe en otro usuario antes de crear
                 $existingEmail = UserModel::where('email', $user->getEmail())->first();
                 if ($existingEmail) {
@@ -87,8 +109,30 @@ class EloquentUserRepository implements UserRepositoryInterface
                 'trace' => $e->getTraceAsString()
             ]);
             
-            // Si el error menciona "Duplicate entry" o "email", verificar el estado del email
-            if (str_contains($e->getMessage(), 'Duplicate entry') || str_contains($e->getMessage(), 'email')) {
+            // Si el error menciona "Duplicate entry", verificar si es por email o google_id
+            if (str_contains($e->getMessage(), 'Duplicate entry') || str_contains($e->getMessage(), 'email') || str_contains($e->getMessage(), 'google_id')) {
+                // Verificar si es por google_id duplicado
+                if ($user->getGoogleId()) {
+                    $existingGoogleId = UserModel::where('google_id', $user->getGoogleId())->first();
+                    if ($existingGoogleId) {
+                        // Si el google_id ya existe, actualizar ese usuario
+                        $existingGoogleId->update([
+                            'nombre' => $user->getNombre(),
+                            'apellidos' => $user->getApellidos(),
+                            'email' => $user->getEmail(),
+                            'password' => $user->getPassword(),
+                            'email_verificado' => $user->isEmailVerificado(),
+                            'quiz_completed' => $user->isQuizCompleted(),
+                            'avatar' => $user->getAvatar(),
+                            'auth_provider' => $user->getAuthProvider(),
+                            'is_admin' => $user->isAdmin(),
+                        ]);
+                        $existingGoogleId->refresh();
+                        return $this->toDomainEntity($existingGoogleId);
+                    }
+                }
+
+                // Verificar si es por email duplicado
                 $existingEmail = UserModel::where('email', $user->getEmail())->first();
                 if ($existingEmail && $existingEmail->email_verificado) {
                     throw new Exception('El email ya está registrado y verificado');
