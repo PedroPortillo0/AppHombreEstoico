@@ -283,8 +283,8 @@
                     <i class="bi bi-award"></i>
                 </span>
                 <div class="feature-content">
-                    <div class="feature-title">Insignia de perfil Premium</div>
-                    <p class="feature-description">Destaca con tu badge exclusivo</p>
+                    <div class="feature-title">Desafíos Personalizados</div>
+                    <p class="feature-description">Obtén desafíos adaptados a tus intereses</p>
                 </div>
             </div>
             
