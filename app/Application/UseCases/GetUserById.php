@@ -14,8 +14,13 @@ class GetUserById
     public function execute(string $userId): array
     {
         try {
-            if (empty($userId)) {
+            if (empty(trim($userId))) {
                 throw new Exception('ID de usuario es requerido');
+            }
+
+            // Validar formato del ID (debe ser UUID)
+            if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $userId)) {
+                throw new Exception('ID de usuario inválido');
             }
 
             // Buscar usuario por ID
@@ -44,12 +49,15 @@ class GetUserById
         return [
             'id' => $user->getId(),
             'nombre' => $user->getNombre(),
-            'apellidoPaterno' => $user->getApellidoPaterno(),
-            'apellidoMaterno' => $user->getApellidoMaterno(),
+            'apellidos' => $user->getApellidos(),
             'nombreCompleto' => $user->getNombreCompleto(),
-            'telefono' => $user->getTelefono(),
             'email' => $user->getEmail(),
             'emailVerificado' => $user->isEmailVerificado(),
+            'quizCompleted' => $user->isQuizCompleted(),
+            'googleId' => $user->getGoogleId(),
+            'avatar' => $user->getAvatar(),
+            'authProvider' => $user->getAuthProvider(),
+            'isAdmin' => $user->isAdmin(),
             'fechaCreacion' => $user->getFechaCreacion()->format('Y-m-d H:i:s')
         ];
     }

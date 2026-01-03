@@ -53,12 +53,15 @@ class GetAllUsers
         return [
             'id' => $user->getId(),
             'nombre' => $user->getNombre(),
-            'apellidoPaterno' => $user->getApellidoPaterno(),
-            'apellidoMaterno' => $user->getApellidoMaterno(),
+            'apellidos' => $user->getApellidos(),
             'nombreCompleto' => $user->getNombreCompleto(),
-            'telefono' => $user->getTelefono(),
             'email' => $user->getEmail(),
             'emailVerificado' => $user->isEmailVerificado(),
+            'quizCompleted' => $user->isQuizCompleted(),
+            'googleId' => $user->getGoogleId(),
+            'avatar' => $user->getAvatar(),
+            'authProvider' => $user->getAuthProvider(),
+            'isAdmin' => $user->isAdmin(),
             'fechaCreacion' => $user->getFechaCreacion()->format('Y-m-d H:i:s')
         ];
     }

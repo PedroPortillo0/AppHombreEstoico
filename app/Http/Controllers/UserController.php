@@ -86,12 +86,14 @@ class UserController extends Controller
     {
         // Validación de entrada
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string'
+            'email' => 'required|email|max:255',
+            'password' => 'required|string|min:1'
         ], [
             'email.required' => 'El email es requerido',
             'email.email' => 'El email debe tener un formato válido',
-            'password.required' => 'La contraseña es requerida'
+            'email.max' => 'El email no puede exceder 255 caracteres',
+            'password.required' => 'La contraseña es requerida',
+            'password.min' => 'La contraseña no puede estar vacía'
         ]);
 
         if ($validator->fails()) {
@@ -111,7 +113,7 @@ class UserController extends Controller
     {
         $token = $request->query('token');
 
-        if (!$token) {
+        if (empty($token) || !is_string($token)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Token de verificación requerido'
@@ -127,12 +129,14 @@ class UserController extends Controller
     {
         // Validación de entrada
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|string',
-            'code' => 'required|string|size:6'
+            'user_id' => 'required|string|uuid',
+            'code' => 'required|string|size:6|regex:/^[0-9]{6}$/'
         ], [
             'user_id.required' => 'El ID de usuario es requerido',
+            'user_id.uuid' => 'El ID de usuario debe ser un UUID válido',
             'code.required' => 'El código de verificación es requerido',
-            'code.size' => 'El código debe tener exactamente 6 dígitos'
+            'code.size' => 'El código debe tener exactamente 6 dígitos',
+            'code.regex' => 'El código debe contener solo números'
         ]);
 
         if ($validator->fails()) {
@@ -155,10 +159,11 @@ class UserController extends Controller
     {
         // Validación de entrada
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email'
+            'email' => 'required|email|max:255'
         ], [
             'email.required' => 'El email es requerido',
-            'email.email' => 'El email debe tener un formato válido'
+            'email.email' => 'El email debe tener un formato válido',
+            'email.max' => 'El email no puede exceder 255 caracteres'
         ]);
 
         if ($validator->fails()) {
@@ -178,16 +183,19 @@ class UserController extends Controller
     {
         // Validación de entrada
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'code' => 'required|string|size:6',
-            'new_password' => 'required|string|min:6'
+            'email' => 'required|email|max:255',
+            'code' => 'required|string|size:6|regex:/^[0-9]{6}$/',
+            'new_password' => 'required|string|min:6|max:255'
         ], [
             'email.required' => 'El email es requerido',
             'email.email' => 'El email debe tener un formato válido',
+            'email.max' => 'El email no puede exceder 255 caracteres',
             'code.required' => 'El código de verificación es requerido',
             'code.size' => 'El código debe tener exactamente 6 dígitos',
+            'code.regex' => 'El código debe contener solo números',
             'new_password.required' => 'La nueva contraseña es requerida',
-            'new_password.min' => 'La nueva contraseña debe tener al menos 6 caracteres'
+            'new_password.min' => 'La nueva contraseña debe tener al menos 6 caracteres',
+            'new_password.max' => 'La nueva contraseña no puede exceder 255 caracteres'
         ]);
 
         if ($validator->fails()) {
@@ -209,6 +217,14 @@ class UserController extends Controller
 
     public function getUser(string $id): JsonResponse
     {
+        // Validar formato del ID (debe ser UUID)
+        if (empty($id) || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ID de usuario inválido'
+            ], 400);
+        }
+
         $result = $this->getUserById->execute($id);
         
         return response()->json($result, $result['success'] ? 200 : 404);
@@ -216,6 +232,26 @@ class UserController extends Controller
 
     public function getAllUsers(Request $request): JsonResponse
     {
+        // Validar parámetros de paginación
+        $validator = Validator::make($request->all(), [
+            'page' => 'nullable|integer|min:1',
+            'limit' => 'nullable|integer|min:1|max:100'
+        ], [
+            'page.integer' => 'La página debe ser un número entero',
+            'page.min' => 'La página debe ser mayor a 0',
+            'limit.integer' => 'El límite debe ser un número entero',
+            'limit.min' => 'El límite debe ser mayor a 0',
+            'limit.max' => 'El límite no puede exceder 100'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Errores de validación',
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
         // Obtener parámetros de paginación de la query string
         $page = (int) $request->query('page', 1);
         $limit = (int) $request->query('limit', 10);
@@ -227,6 +263,14 @@ class UserController extends Controller
 
         public function deleteUser(string $id): JsonResponse
         {
+            // Validar formato del ID (debe ser UUID)
+            if (empty($id) || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ID de usuario inválido'
+                ], 400);
+            }
+
             $result = $this->deleteUser->execute($id);
             
             return response()->json($result, $result['success'] ? 200 : 404);
@@ -239,6 +283,21 @@ class UserController extends Controller
         {
             $user = $this->getAuthenticatedUser($request);
             $payload = $this->getTokenPayload($request);
+            
+            // Validar que el usuario y payload no sean null
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            if (!$payload) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token inválido'
+                ], 401);
+            }
             
             return response()->json([
                 'success' => true,
@@ -284,16 +343,16 @@ class UserController extends Controller
 
             // Validación de campos opcionales (solo los que se envíen)
             $validator = Validator::make($request->all(), [
-                'age_range' => 'nullable|string',
-                'gender' => 'nullable|string',
-                'country' => 'nullable|string',
-                'religious_belief' => 'nullable|string',
-                'spiritual_practice_level' => 'nullable|string',
-                'spiritual_practice_frequency' => 'nullable|string',
+                'age_range' => 'nullable|string|max:255',
+                'gender' => 'nullable|string|max:255',
+                'country' => 'nullable|string|max:255',
+                'religious_belief' => 'nullable|string|max:255',
+                'spiritual_practice_level' => 'nullable|string|max:255',
+                'spiritual_practice_frequency' => 'nullable|string|max:255',
                 'daily_challenges' => 'nullable|array|min:2',
-                'daily_challenges.*' => 'string',
+                'daily_challenges.*' => 'string|max:255',
                 'stoic_paths' => 'nullable|array|min:2',
-                'stoic_paths.*' => 'string',
+                'stoic_paths.*' => 'string|max:255',
                 'stoic_level' => 'nullable|string|in:principiante,basico_intermedio,intermedio,intermedio_avanzado,avanzado',
             ], [
                 'age_range.string' => 'El rango de edad debe ser un texto válido',

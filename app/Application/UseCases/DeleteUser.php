@@ -14,6 +14,16 @@ class DeleteUser
     public function execute(string $userId): array
     {
         try {
+            // Validar que el ID no esté vacío
+            if (empty(trim($userId))) {
+                throw new Exception('ID de usuario es requerido');
+            }
+
+            // Validar formato del ID (debe ser UUID)
+            if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $userId)) {
+                throw new Exception('ID de usuario inválido');
+            }
+
             // Verificar que el usuario existe
             $user = $this->userRepository->findById($userId);
             

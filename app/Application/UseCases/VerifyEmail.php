@@ -16,6 +16,11 @@ class VerifyEmail
     public function execute(string $token): array
     {
         try {
+            // Validar que el token no esté vacío
+            if (empty(trim($token))) {
+                throw new Exception('Token de verificación requerido');
+            }
+
             // Verificar token
             $decoded = $this->tokenService->verifyToken($token);
             
