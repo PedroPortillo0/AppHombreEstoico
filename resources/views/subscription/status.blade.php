@@ -122,6 +122,18 @@
         background: #374151;
         color: white;
     }
+
+    .btn-app {
+        background: linear-gradient(135deg, #7e8191ff 0%, #303030ff 100%);
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(126, 129, 145, 0.3);
+    }
+
+    .btn-app:hover {
+        box-shadow: 0 6px 16px rgba(126, 129, 145, 0.4);
+        transform: translateY(-2px);
+    }
     
     .btn-secondary {
         background: #f3f4f6;
@@ -237,6 +249,11 @@
             <!-- Botones de acción -->
             <div class="action-buttons">
                 @if($subscription->isActive())
+                    <!-- Botón para volver a la app (Deep Link) -->
+                    <a href="stoicapp://subscription-success" class="btn btn-app">
+                        <i class="bi bi-arrow-right-circle"></i> Volver a la App
+                    </a>
+                    
                     <form action="{{ route('subscription.cancel') }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas cancelar tu suscripción?')">
                         @csrf
                         <button type="submit" class="btn btn-danger">
@@ -248,10 +265,6 @@
                         <i class="bi bi-arrow-repeat"></i> Renovar suscripción
                     </a>
                 @endif
-                
-                <a href="/" class="btn btn-secondary">
-                    <i class="bi bi-house"></i> Volver al inicio
-                </a>
             </div>
         @else
             <!-- Estado sin suscripción -->
