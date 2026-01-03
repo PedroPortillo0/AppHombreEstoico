@@ -7,6 +7,7 @@ use App\Domain\Ports\UserRepositoryInterface;
 use App\Models\User as UserModel;
 use DateTime;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class EloquentUserRepository implements UserRepositoryInterface
 {
@@ -53,7 +54,7 @@ class EloquentUserRepository implements UserRepositoryInterface
                         'is_admin' => $user->isAdmin(),
                     ]);
                 } else {
-                    // Crear nuevo usuario
+                    // Crear nuevo usuario - incluir stoic_points explícitamente
                     $userModel = UserModel::create([
                         'id' => $user->getId(),
                         'nombre' => $user->getNombre(),
@@ -66,6 +67,7 @@ class EloquentUserRepository implements UserRepositoryInterface
                         'avatar' => $user->getAvatar(),
                         'auth_provider' => $user->getAuthProvider(),
                         'is_admin' => $user->isAdmin(),
+                        'stoic_points' => 0, // Incluir explícitamente
                         'created_at' => $user->getFechaCreacion()
                     ]);
                 }
@@ -77,6 +79,14 @@ class EloquentUserRepository implements UserRepositoryInterface
             return $this->toDomainEntity($userModel);
 
         } catch (Exception $e) {
+            // Log del error para debugging
+            Log::error('Error al guardar usuario', [
+                'user_id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             // Si el error menciona "Duplicate entry" o "email", verificar el estado del email
             if (str_contains($e->getMessage(), 'Duplicate entry') || str_contains($e->getMessage(), 'email')) {
                 $existingEmail = UserModel::where('email', $user->getEmail())->first();

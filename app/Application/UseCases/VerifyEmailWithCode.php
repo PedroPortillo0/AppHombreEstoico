@@ -15,6 +15,25 @@ class VerifyEmailWithCode
     public function execute(string $userId, string $code): array
     {
         try {
+            // Validar que userId y code no estén vacíos
+            if (empty(trim($userId))) {
+                throw new Exception('ID de usuario requerido');
+            }
+
+            if (empty(trim($code))) {
+                throw new Exception('Código de verificación requerido');
+            }
+
+            // Validar formato del código (debe ser 6 dígitos)
+            if (!preg_match('/^[0-9]{6}$/', $code)) {
+                throw new Exception('El código debe contener exactamente 6 dígitos numéricos');
+            }
+
+            // Validar formato del ID (debe ser UUID)
+            if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $userId)) {
+                throw new Exception('ID de usuario inválido');
+            }
+
             // Buscar el usuario
             $user = $this->userRepository->findById($userId);
             if (!$user) {
