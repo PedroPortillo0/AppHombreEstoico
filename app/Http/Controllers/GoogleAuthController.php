@@ -46,14 +46,24 @@ class GoogleAuthController extends Controller
     /**
      * Maneja el callback de Google después de la autenticación
      * Redirige al deep link de la app móvil
+     * Captura TODOS los errores (incluyendo 500) y redirige al deep link de error
      */
     public function handleGoogleCallback(Request $request): RedirectResponse
     {
         try {
             // Obtener información del usuario de Google
-            $googleUser = Socialite::driver('google')
-                ->stateless()
-                ->user();
+            // Esto puede lanzar excepciones de Socialite si hay problemas con OAuth
+            try {
+                $googleUser = Socialite::driver('google')
+                    ->stateless()
+                    ->user();
+            } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
+                throw new Exception('Sesión de autenticación inválida. Por favor, intenta de nuevo.');
+            } catch (\GuzzleHttp\Exception\ClientException $e) {
+                throw new Exception('Error al comunicarse con Google. Por favor, intenta de nuevo.');
+            } catch (\GuzzleHttp\Exception\ServerException $e) {
+                throw new Exception('Error en el servidor de Google. Por favor, intenta más tarde.');
+            }
 
             // Validar que el usuario de Google no sea null
             if (!$googleUser) {
@@ -94,9 +104,9 @@ class GoogleAuthController extends Controller
                     'result' => $result,
                     'google_data' => $googleUserData
                 ]);
-                $errorMessage = urlencode($result['message'] ?? 'Error en autenticación');
-                $deepLink = "estoico://auth/error?message={$errorMessage}";
-                return redirect($deepLink, 302);
+                
+                $errorMessage = $this->formatErrorMessage($result['message'] ?? 'Error en autenticación');
+                return $this->redirectToErrorDeepLink($errorMessage, 500);
             }
 
             // Validar que la respuesta tenga la estructura esperada
@@ -142,15 +152,81 @@ class GoogleAuthController extends Controller
             // Redirigir al deep link de la app móvil
             return redirect($deepLink, 302);
 
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
+            // Capturar TODOS los tipos de errores (Exception, Error, etc.)
             Log::error('Excepción en handleGoogleCallback', [
                 'error' => $e->getMessage(),
+                'type' => get_class($e),
                 'trace' => $e->getTraceAsString()
             ]);
-            $errorMessage = urlencode('Error en callback de Google: ' . $e->getMessage());
-            $deepLink = "estoico://auth/error?message={$errorMessage}";
-            return redirect($deepLink, 302);
+            
+            $errorMessage = $this->formatErrorMessage($e->getMessage());
+            return $this->redirectToErrorDeepLink($errorMessage, 500);
         }
+    }
+
+    /**
+     * Formatea el mensaje de error para que sea más amigable al usuario
+     */
+    private function formatErrorMessage(string $errorMessage): string
+    {
+        $errorLower = strtolower($errorMessage);
+        
+        // Usuario duplicado
+        if (strpos($errorLower, 'duplicate') !== false || 
+            strpos($errorLower, 'already exists') !== false ||
+            strpos($errorLower, 'ya está registrado') !== false) {
+            return 'El usuario ya existe. Por favor, inicia sesión.';
+        }
+        
+        // Error de base de datos
+        if (strpos($errorLower, 'database') !== false || 
+            strpos($errorLower, 'connection') !== false ||
+            strpos($errorLower, 'sql') !== false) {
+            return 'Error de conexión con la base de datos. Por favor, intenta de nuevo.';
+        }
+        
+        // Error de validación
+        if (strpos($errorLower, 'validation') !== false || 
+            strpos($errorLower, 'invalid') !== false ||
+            strpos($errorLower, 'incompletos') !== false) {
+            return 'Datos inválidos recibidos de Google.';
+        }
+        
+        // Error de token JWT
+        if (strpos($errorLower, 'token') !== false || 
+            strpos($errorLower, 'jwt') !== false) {
+            return 'Error al generar el token de autenticación. Por favor, intenta de nuevo.';
+        }
+        
+        // Error de Google OAuth
+        if (strpos($errorLower, 'google') !== false || 
+            strpos($errorLower, 'oauth') !== false ||
+            strpos($errorLower, 'socialite') !== false) {
+            return 'Error al autenticar con Google. Por favor, intenta de nuevo.';
+        }
+        
+        // Error genérico
+        return 'Error al procesar la autenticación. Por favor, intenta de nuevo.';
+    }
+
+    /**
+     * Redirige al deep link de error con todos los parámetros requeridos
+     */
+    private function redirectToErrorDeepLink(string $errorMessage, int $statusCode = 500): RedirectResponse
+    {
+        $encodedError = urlencode($errorMessage);
+        $encodedMessage = urlencode($errorMessage);
+        
+        // Construir deep link con todos los parámetros requeridos por el frontend
+        $deepLink = sprintf(
+            "estoico://auth/error?error=%s&status_code=%d&message=%s",
+            $encodedError,
+            $statusCode,
+            $encodedMessage
+        );
+        
+        return redirect($deepLink, 302);
     }
 
     /**
