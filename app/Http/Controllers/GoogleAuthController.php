@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Application\UseCases\LoginWithGoogle;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 use Exception;
@@ -43,8 +44,9 @@ class GoogleAuthController extends Controller
 
     /**
      * Maneja el callback de Google después de la autenticación
+     * Redirige al deep link de la app móvil
      */
-    public function handleGoogleCallback(Request $request): JsonResponse
+    public function handleGoogleCallback(Request $request): RedirectResponse
     {
         try {
             // Obtener información del usuario de Google
@@ -63,13 +65,43 @@ class GoogleAuthController extends Controller
             // Ejecutar caso de uso de login/registro
             $result = $this->loginWithGoogle->execute($googleUserData);
 
-            return response()->json($result, $result['success'] ? 200 : 400);
+            // Si hay error, redirigir a deep link de error
+            if (!$result['success']) {
+                $errorMessage = urlencode($result['message'] ?? 'Error en autenticación');
+                $deepLink = "estoico://auth/error?message={$errorMessage}";
+                return redirect($deepLink, 302);
+            }
+
+            // Extraer datos del usuario y token
+            $userData = $result['data']['user'];
+            $token = $result['data']['token'];
+            
+            $userId = $userData['id'] ?? '';
+            $nombre = urlencode($userData['nombre'] ?? '');
+            $apellidos = urlencode($userData['apellidos'] ?? '');
+            $email = urlencode($userData['email'] ?? '');
+            $quizCompleted = $userData['quizCompleted'] ?? false;
+            $isNewUser = !$quizCompleted;
+
+            // Construir deep link con todos los parámetros
+            $deepLink = sprintf(
+                "estoico://auth/success?token=%s&userId=%s&nombre=%s&apellidos=%s&email=%s&isNewUser=%s",
+                urlencode($token),
+                urlencode($userId),
+                $nombre,
+                $apellidos,
+                $email,
+                $isNewUser ? 'true' : 'false'
+            );
+
+            // Redirigir al deep link de la app móvil
+            return redirect($deepLink, 302);
 
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error en callback de Google: ' . $e->getMessage()
-            ], 500);
+            // En caso de error, redirigir a deep link de error
+            $errorMessage = urlencode('Error en callback de Google: ' . $e->getMessage());
+            $deepLink = "estoico://auth/error?message={$errorMessage}";
+            return redirect($deepLink, 302);
         }
     }
 
