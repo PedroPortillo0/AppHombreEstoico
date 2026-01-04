@@ -89,9 +89,12 @@ class LoginWithGoogle
                         Log::error('Error al crear usuario con Google', [
                             'google_id' => $googleUserData['id'],
                             'email' => $googleUserData['email'],
+                            'name' => $googleUserData['name'] ?? 'N/A',
                             'error' => $e->getMessage(),
+                            'error_class' => get_class($e),
                             'trace' => $e->getTraceAsString()
                         ]);
+                        // Preservar el mensaje original del error
                         throw new Exception('Error al crear cuenta: ' . $e->getMessage());
                     }
                 }
@@ -111,7 +114,10 @@ class LoginWithGoogle
 
         } catch (Exception $e) {
             Log::error('Error en LoginWithGoogle', [
+                'google_id' => $googleUserData['id'] ?? 'N/A',
+                'email' => $googleUserData['email'] ?? 'N/A',
                 'error' => $e->getMessage(),
+                'error_class' => get_class($e),
                 'trace' => $e->getTraceAsString()
             ]);
             return [
