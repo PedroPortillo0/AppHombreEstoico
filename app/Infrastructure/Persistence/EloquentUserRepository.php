@@ -105,12 +105,17 @@ class EloquentUserRepository implements UserRepositoryInterface
             Log::error('Error al guardar usuario', [
                 'user_id' => $user->getId(),
                 'email' => $user->getEmail(),
+                'google_id' => $user->getGoogleId(),
                 'error' => $e->getMessage(),
+                'error_class' => get_class($e),
                 'trace' => $e->getTraceAsString()
             ]);
             
             // Si el error menciona "Duplicate entry", verificar si es por email o google_id
-            if (str_contains($e->getMessage(), 'Duplicate entry') || str_contains($e->getMessage(), 'email') || str_contains($e->getMessage(), 'google_id')) {
+            if (str_contains($e->getMessage(), 'Duplicate entry') || 
+                str_contains($e->getMessage(), 'email') || 
+                str_contains($e->getMessage(), 'google_id')) {
+                
                 // Verificar si es por google_id duplicado
                 if ($user->getGoogleId()) {
                     $existingGoogleId = UserModel::where('google_id', $user->getGoogleId())->first();
@@ -156,6 +161,8 @@ class EloquentUserRepository implements UserRepositoryInterface
                 }
                 throw new Exception('El email ya está registrado');
             }
+            
+            // Para otros errores, preservar el mensaje original
             throw new Exception('Error al guardar usuario: ' . $e->getMessage());
         }
     }
