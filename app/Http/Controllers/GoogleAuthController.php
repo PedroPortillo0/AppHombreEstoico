@@ -139,7 +139,7 @@ class GoogleAuthController extends Controller
                 'has_error' => $request->has('error'),
                 'error' => $request->query('error'),
                 'error_description' => $request->query('error_description'),
-                'query_params' => $request->query()->all(),
+                'query_params' => $request->query(),
                 'full_url' => $fullUrl
             ],
             'timestamp' => time() * 1000
@@ -159,7 +159,7 @@ class GoogleAuthController extends Controller
                 'has_error' => $request->has('error'),
                 'error' => $request->query('error'),
                 'error_description' => $request->query('error_description'),
-                'query_params' => $request->query()->all(),
+                'query_params' => $request->query(),
                 'full_url' => $fullUrl
             ],
             'timestamp' => time() * 1000
@@ -167,7 +167,7 @@ class GoogleAuthController extends Controller
         // #endregion
         
         Log::info('Google OAuth callback recibido', [
-            'query_params' => $request->query()->all(),
+            'query_params' => $request->query(),
             'has_code' => $request->has('code'),
             'has_error' => $request->has('error'),
             'error' => $request->query('error'),
@@ -198,7 +198,7 @@ class GoogleAuthController extends Controller
         // Verificar que el código de autorización esté presente
         if (!$request->has('code')) {
             Log::error('Callback de Google sin código de autorización', [
-                'query_params' => $request->query()->all(),
+                'query_params' => $request->query(),
                 'full_url' => $request->fullUrl()
             ]);
             
@@ -240,7 +240,7 @@ class GoogleAuthController extends Controller
                     'code_length' => strlen($code),
                     'redirect_uri_config' => $redirectUriConfig,
                     'full_url' => $request->fullUrl(),
-                    'query_params' => $request->query()->all()
+                    'query_params' => $request->query()
                 ]);
                 
                 // #region agent log
