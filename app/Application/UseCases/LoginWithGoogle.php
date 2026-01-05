@@ -165,16 +165,18 @@ class LoginWithGoogle
 
         // Crear el usuario
         $user = new User(
-            Str::uuid()->toString(),
-            trim($nombre),
-            trim($apellidos),
-            $googleUserData['email'],
-            null, // Sin contraseña para usuarios de Google
-            true, // Email verificado automáticamente
-            null, // Fecha de creación (se asigna automáticamente)
-            $googleUserData['id'], // Google ID
-            $googleUserData['avatar'] ?? null,
-            'google' // Provider
+            Str::uuid()->toString(), // id
+            $nombre, // nombre
+            $apellidos, // apellidos
+            $googleUserData['email'], // email
+            null, // password (Sin contraseña para usuarios de Google)
+            true, // emailVerificado (Email verificado automáticamente)
+            false, // quizCompleted (Nuevo usuario, no ha completado el quiz)
+            null, // fechaCreacion (se asigna automáticamente)
+            $googleUserData['id'], // googleId
+            $googleUserData['avatar'] ?? null, // avatar
+            'google', // authProvider
+            false // isAdmin
         );
 
         // Guardar en la base de datos
