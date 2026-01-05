@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Application\UseCases\LoginWithGoogle;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
@@ -21,8 +22,12 @@ class GoogleAuthController extends Controller
     public function redirectToGoogle(): JsonResponse
     {
         try {
+            // Configurar redirect_uri para usar el dominio de producción
+            $redirectUri = env('GOOGLE_REDIRECT_URI', 'https://web.estoico.app/api/auth/google/callback');
+            
             $url = Socialite::driver('google')
                 ->stateless()
+                ->redirectUrl($redirectUri)
                 ->redirect()
                 ->getTargetUrl();
 
@@ -44,8 +49,9 @@ class GoogleAuthController extends Controller
 
     /**
      * Maneja el callback de Google después de la autenticación
+     * Redirige al deep link de la app móvil con los datos de autenticación
      */
-    public function handleGoogleCallback(Request $request): JsonResponse
+    public function handleGoogleCallback(Request $request): RedirectResponse|JsonResponse
     {
         // Verificar si Google devolvió un error
         if ($request->has('error')) {
@@ -58,10 +64,7 @@ class GoogleAuthController extends Controller
             ]);
             
             $errorMessage = $this->formatGoogleOAuthError($error, $errorDescription);
-            return response()->json([
-                'success' => false,
-                'message' => $errorMessage
-            ], 400);
+            return $this->redirectToErrorDeepLink($errorMessage, 400);
         }
 
         // Verificar que el código de autorización esté presente
@@ -71,28 +74,28 @@ class GoogleAuthController extends Controller
                 'full_url' => $request->fullUrl()
             ]);
             
-            return response()->json([
-                'success' => false,
-                'message' => 'No se recibió el código de autorización de Google. Por favor, intenta de nuevo.'
-            ], 400);
+            $errorMessage = 'No se recibió el código de autorización de Google. Por favor, intenta de nuevo.';
+            return $this->redirectToErrorDeepLink($errorMessage, 400);
         }
 
         try {
+            // Configurar redirect_uri para usar el dominio de producción
+            $redirectUri = env('GOOGLE_REDIRECT_URI', 'https://web.estoico.app/api/auth/google/callback');
+            
             // Obtener información del usuario de Google
             // Esto puede lanzar excepciones de Socialite si hay problemas con OAuth
             try {
                 $googleUser = Socialite::driver('google')
                     ->stateless()
+                    ->redirectUrl($redirectUri)
                     ->user();
             } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
                 Log::error('InvalidStateException en Google OAuth', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sesión de autenticación inválida. Por favor, intenta de nuevo.'
-                ], 400);
+                $errorMessage = 'Sesión de autenticación inválida. Por favor, intenta de nuevo.';
+                return $this->redirectToErrorDeepLink($errorMessage, 400);
             } catch (\GuzzleHttp\Exception\ClientException $e) {
                 $response = $e->getResponse();
                 $responseBody = $response ? $response->getBody()->getContents() : null;
@@ -114,19 +117,14 @@ class GoogleAuthController extends Controller
                     $message = 'Error al comunicarse con Google (código ' . $statusCode . '). Por favor, intenta de nuevo.';
                 }
                 
-                return response()->json([
-                    'success' => false,
-                    'message' => $message
-                ], $statusCode ?? 500);
+                return $this->redirectToErrorDeepLink($message, $statusCode ?? 500);
             } catch (\GuzzleHttp\Exception\ServerException $e) {
                 Log::error('ServerException en Google OAuth', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error en el servidor de Google. Por favor, intenta más tarde.'
-                ], 500);
+                $errorMessage = 'Error en el servidor de Google. Por favor, intenta más tarde.';
+                return $this->redirectToErrorDeepLink($errorMessage, 500);
             } catch (\Exception $e) {
                 Log::error('Excepción al obtener usuario de Google', [
                     'error' => $e->getMessage(),
@@ -179,10 +177,7 @@ class GoogleAuthController extends Controller
                 
                 // Usar el mensaje formateado
                 $errorMessage = $this->formatErrorMessage($result['message'] ?? 'Error en autenticación');
-                return response()->json([
-                    'success' => false,
-                    'message' => $errorMessage
-                ], 500);
+                return $this->redirectToErrorDeepLink($errorMessage, 500);
             }
 
             // Validar que la respuesta tenga la estructura esperada
@@ -196,6 +191,7 @@ class GoogleAuthController extends Controller
             // Extraer datos del usuario y token
             $userData = $result['data']['user'];
             $token = $result['data']['token'];
+            $isNewUser = $result['data']['is_new_user'] ?? false;
             
             // Validar que el token no esté vacío
             if (empty($token)) {
@@ -207,7 +203,15 @@ class GoogleAuthController extends Controller
                 throw new Exception('Datos del usuario incompletos');
             }
 
-            return response()->json($result, 200);
+            // Redirigir al deep link de éxito
+            return $this->redirectToSuccessDeepLink(
+                $token,
+                $userData['id'],
+                $userData['nombre'] ?? '',
+                $userData['apellidos'] ?? '',
+                $userData['email'] ?? '',
+                $isNewUser
+            );
 
         } catch (\Throwable $e) {
             // Capturar TODOS los tipos de errores (Exception, Error, etc.)
@@ -220,10 +224,7 @@ class GoogleAuthController extends Controller
             ]);
             
             $errorMessage = $this->formatErrorMessage($e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => $errorMessage
-            ], 500);
+            return $this->redirectToErrorDeepLink($errorMessage, 500);
         }
     }
 
@@ -471,6 +472,56 @@ class GoogleAuthController extends Controller
         }
         
         return 'Error al autenticar con Google: ' . $error;
+    }
+
+    /**
+     * Construye y redirige al deep link de éxito
+     */
+    private function redirectToSuccessDeepLink(
+        string $token,
+        string $userId,
+        string $nombre,
+        string $apellidos,
+        string $email,
+        bool $isNewUser
+    ): RedirectResponse {
+        $deepLink = 'estoico://auth/success?' . http_build_query([
+            'token' => $token,
+            'userId' => $userId,
+            'nombre' => $nombre,
+            'apellidos' => $apellidos,
+            'email' => $email,
+            'is_new_user' => $isNewUser ? 'true' : 'false'
+        ]);
+
+        Log::info('Redirigiendo a deep link de éxito', [
+            'deep_link' => $deepLink,
+            'user_id' => $userId,
+            'is_new_user' => $isNewUser
+        ]);
+
+        return redirect($deepLink);
+    }
+
+    /**
+     * Construye y redirige al deep link de error
+     */
+    private function redirectToErrorDeepLink(string $errorMessage, int $statusCode = 500): RedirectResponse
+    {
+        $deepLink = 'estoico://auth/error?' . http_build_query([
+            'error' => $errorMessage,
+            'message' => $errorMessage,
+            'status_code' => (string)$statusCode,
+            'statusCode' => (string)$statusCode
+        ]);
+
+        Log::warning('Redirigiendo a deep link de error', [
+            'deep_link' => $deepLink,
+            'error_message' => $errorMessage,
+            'status_code' => $statusCode
+        ]);
+
+        return redirect($deepLink);
     }
 }
 
