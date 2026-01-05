@@ -54,6 +54,7 @@ class LoginWithGoogle
 
             // Buscar usuario por Google ID
             $user = $this->userRepository->findByGoogleId($googleUserData['id']);
+            $isNewUser = false;
 
             if (!$user) {
                 // Si no existe por Google ID, buscar por email
@@ -81,10 +82,13 @@ class LoginWithGoogle
                     if (!$user) {
                         throw new Exception('Error al actualizar usuario existente');
                     }
+                    // Usuario existente, no es nuevo
+                    $isNewUser = false;
                 } else {
                     // Crear nuevo usuario
                     try {
                         $user = $this->createNewGoogleUser($googleUserData);
+                        $isNewUser = true;
                     } catch (Exception $e) {
                         Log::error('Error al crear usuario con Google', [
                             'google_id' => $googleUserData['id'],
@@ -108,7 +112,8 @@ class LoginWithGoogle
                 'message' => 'Login con Google exitoso',
                 'data' => [
                     'user' => $user->toArray(),
-                    'token' => $token
+                    'token' => $token,
+                    'is_new_user' => $isNewUser
                 ]
             ];
 
