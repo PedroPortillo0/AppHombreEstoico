@@ -72,33 +72,10 @@ Route::prefix('auth/google')->group(function () {
     Route::get('/redirect', [GoogleAuthController::class, 'redirectToGoogle']);
     
     // Callback de Google después de autenticación
-    // IMPORTANTE: Esta ruta debe ser pública (sin middleware de autenticación)
     Route::get('/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
     
     // Login con token de Google (para apps móviles/SPA)
     Route::post('/token', [GoogleAuthController::class, 'loginWithGoogleToken']);
-    
-    // Ruta de prueba para verificar que el callback sea accesible
-    Route::get('/test-callback', function (Request $request) {
-        \Illuminate\Support\Facades\Log::info('Test callback route hit', [
-            'query_params' => $request->query()->all(),
-            'full_url' => $request->fullUrl(),
-            'user_agent' => $request->userAgent(),
-            'ip' => $request->ip()
-        ]);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Callback endpoint es accesible',
-            'url' => $request->fullUrl(),
-            'query_params' => $request->query()->all(),
-            'timestamp' => now()->toDateTimeString(),
-            'config' => [
-                'redirect_uri' => config('services.google.redirect'),
-                'client_id' => config('services.google.client_id') ? 'configurado' : 'no configurado'
-            ]
-        ]);
-    });
 });
 
 // ========================================
