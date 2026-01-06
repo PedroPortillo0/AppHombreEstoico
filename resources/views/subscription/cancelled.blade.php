@@ -204,6 +204,18 @@
         color: #374151;
     }
     
+    .btn-app {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+    
+    .btn-app:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
     .feedback-section {
         margin-top: 2rem;
         padding-top: 2rem;
@@ -326,9 +338,9 @@
                     Ver estado de suscripción
                 </a>
                 
-                <a href="/" class="btn btn-secondary">
-                    <i class="bi bi-house"></i>
-                    Volver al inicio
+                <!-- Botón para volver a la app (Deep Link) -->
+                <a href="stoicapp://subscription-success" class="btn btn-app">
+                    <i class="bi bi-arrow-right-circle"></i> Volver a la App
                 </a>
             </div>
             
